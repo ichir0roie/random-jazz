@@ -39,3 +39,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+
+tmp
+
+# amplify
+node_modules
+.amplify
+amplify_outputs*
+amplifyconfiguration*
