@@ -7,18 +7,23 @@ import {
   Flex,
   Text,
 } from "@aws-amplify/ui-react";
-import { Amplify } from "aws-amplify";
 import "@aws-amplify/ui-react/styles.css";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import {
   getSettingValueByKey,
   updateSettingByKey,
-} from "@/src/module/dataAccess/settings";
-import outputs from "@/amplify_outputs.json";
+} from "@/module/dataAccess/settings";
 
-Amplify.configure(outputs);
+// これはサーバーサイドにおける設定
+// import { Amplify } from "aws-amplify";
+// import outputs from "../../amplify_outputs.json";
+// Amplify.configure(outputs);
+// https://docs.amplify.aws/nextjs/build-a-backend/server-side-rendering/nextjs-app-router-server-components/
+
+import ConfigureAmplifyClientSide from "@/components/ConfigureAmplify";
 
 function parseInt(value: string): number {
+  ConfigureAmplifyClientSide();
   if (value === "") {
     return 0;
   }
