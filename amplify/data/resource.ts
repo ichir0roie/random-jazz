@@ -8,10 +8,12 @@ const schema = a.schema({
     .authorization((allow) => [allow.guest()]),
   Settings: a
     .model({
+      id: a.id().required(),
       key: a.string(),
       value: a.string(),
     })
-    .authorization((allow) => [allow.authenticated()]),
+    .identifier(["id"])
+    .authorization((allow) => [allow.owner()]),
 });
 
 export type Schema = ClientSchema<typeof schema>;

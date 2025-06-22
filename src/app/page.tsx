@@ -62,6 +62,12 @@ export default function App() {
     updateSettingByKey(key, v);
   }
 
+  function onClickGet() {
+    const randomNumber = generateRandomNumber();
+    setSelectedNumber(randomNumber);
+    updateSettingByKey("selectedNumber", randomNumber.toString());
+  }
+
   return (
     <Authenticator>
       {({ signOut, user }) => (
@@ -105,20 +111,20 @@ export default function App() {
               />
             </Flex>{" "}
             <Flex direction="row" gap="1rem" alignItems="center">
-              <Text fontWeight="bold" width="100px">
+              <Text fontWeight="bold" fontSize="10vh">
                 選曲
               </Text>
               <Text
                 width="200px"
-                fontSize="4xl"
+                fontSize="20vh"
                 textAlign="center"
                 fontWeight="bold"
               >
                 {selectedNumber}
               </Text>
             </Flex>
-            <Button onClick={generateRandomNumber} variation="primary">
-              ランダム生成
+            <Button onClick={onClickGet} variation="primary">
+              ゲッツ！
             </Button>
             <Button onClick={signOut}>サインアウト</Button>
           </Flex>
