@@ -14,16 +14,12 @@ import {
   updateSettingByKey,
 } from "@/module/dataAccess/settings";
 
-// これはサーバーサイドにおける設定
-// import { Amplify } from "aws-amplify";
-// import outputs from "../../amplify_outputs.json";
-// Amplify.configure(outputs);
 // https://docs.amplify.aws/nextjs/build-a-backend/server-side-rendering/nextjs-app-router-server-components/
-
-import ConfigureAmplifyClientSide from "@/components/ConfigureAmplify";
+import { Amplify } from "aws-amplify";
+import outputs from "../../amplify_outputs.json";
+Amplify.configure(outputs);
 
 function parseInt(value: string): number {
-  ConfigureAmplifyClientSide();
   if (value === "") {
     return 0;
   }
