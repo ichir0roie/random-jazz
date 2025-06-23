@@ -17,6 +17,12 @@ import {
 // https://docs.amplify.aws/nextjs/build-a-backend/server-side-rendering/nextjs-app-router-server-components/
 import { Amplify } from "aws-amplify";
 import outputs from "../../amplify_outputs.json";
+import {
+  readTracks,
+  createTrack,
+  updateTrack,
+  readSkipTracks,
+} from "@/module/dataAccess/tracks";
 Amplify.configure(outputs);
 
 function parseInt(value: string): number {
@@ -31,6 +37,7 @@ export default function App() {
   const [minValue, setMinValue] = useState<number>(0);
   const [maxValue, setMaxValue] = useState<number>(300);
   const [selectedNumber, setSelectedNumber] = useState<number>(0);
+  const [title, setTitle] = useState<string>("");
 
   useEffect(() => {
     getSettingValueByKey("minValue").then((value) => {
@@ -40,18 +47,30 @@ export default function App() {
       setMaxValue(parseInt(value || "300"));
     });
     getSettingValueByKey("selectedNumber").then((value) => {
-      setSelectedNumber(parseInt(value));
+      setupTrack(parseInt(value));
     });
   }, []);
 
-  const generateRandomNumber = (): number => {
+  async function generateRandomNumber() {
     if (minValue > maxValue) {
       return 0;
     }
-    const randomNumber =
+    const tracks = await readSkipTracks();
+    const numbers = tracks.map((track) => track.trackNumber);
+    let count = 0;
+    let randomNumber =
       Math.floor(Math.random() * (maxValue - minValue + 1)) + minValue;
+    while (numbers.includes(randomNumber)) {
+      // If the random number is already used, generate a new one
+      randomNumber =
+        Math.floor(Math.random() * (maxValue - minValue + 1)) + minValue;
+      count++;
+      if (count > numbers.length) {
+        throw new Error("Too many attempts to find a unique random number.");
+      }
+    }
     return randomNumber;
-  };
+  }
 
   function onClickValue(
     key: string,
@@ -63,10 +82,55 @@ export default function App() {
     updateSettingByKey(key, v);
   }
 
-  function onClickGet() {
-    const randomNumber = generateRandomNumber();
-    setSelectedNumber(randomNumber);
-    updateSettingByKey("selectedNumber", randomNumber.toString());
+  async function setupTrack(trackNumber: number) {
+    setSelectedNumber(trackNumber);
+    updateSettingByKey("selectedNumber", trackNumber.toString());
+    const track = await readTracks(trackNumber);
+
+    if (track.length <= 0) {
+      setTitle("");
+      return;
+    }
+    setTitle(track[0].title || "");
+  }
+
+  async function onClickGet() {
+    const randomNumber = await generateRandomNumber();
+    setupTrack(randomNumber);
+  }
+
+  async function onClickSkip() {
+    const ex = await readTracks(selectedNumber);
+    if (ex.length > 0) {
+      const updatedTrack = await updateTrack(
+        ex[0].id,
+        selectedNumber,
+        title,
+        true
+      );
+      console.log("Updated track:", updatedTrack);
+    } else {
+      const newTrack = await createTrack(selectedNumber, title, true);
+      console.log("Created new track:", newTrack);
+    }
+
+    onClickGet();
+  }
+  async function onClickRegister() {
+    const ex = await readTracks(selectedNumber);
+    if (ex.length > 0) {
+      const updatedTrack = await updateTrack(
+        ex[0].id,
+        selectedNumber,
+        title,
+        false,
+        ex[0].count ? ex[0].count + 1 : 1
+      );
+      console.log("Updated track:", updatedTrack);
+    } else {
+      const newTrack = await createTrack(selectedNumber, title, false);
+      console.log("Created new track:", newTrack);
+    }
   }
 
   return (
@@ -112,7 +176,7 @@ export default function App() {
               />
             </Flex>{" "}
             <Flex direction="row" gap="1rem" alignItems="center">
-              <Text fontWeight="bold" fontSize="10vh">
+              <Text fontWeight="bold" fontSize="5vh">
                 選曲
               </Text>
               <Text
@@ -124,10 +188,25 @@ export default function App() {
                 {selectedNumber}
               </Text>
             </Flex>
-            <Button onClick={onClickGet} variation="primary">
-              ゲッツ！
+            <TextField
+              label="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              type="text"
+              inputMode="text"
+            />
+            <Flex direction="row" gap="1rem" alignItems="center">
+              <Button onClick={onClickGet} variation="primary">
+                ゲッツ！
+              </Button>
+              <Button onClick={onClickRegister} variation="primary">
+                登録
+              </Button>
+            </Flex>
+            <Button onClick={onClickSkip}>スキップ</Button>
+            <Button onClick={signOut} variation="link">
+              サインアウト
             </Button>
-            <Button onClick={signOut}>サインアウト</Button>
           </Flex>
         </main>
       )}
